@@ -2,7 +2,7 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "1.5.31"
 
     // https://github.com/ben-manes/gradle-versions-plugin
-    id("com.github.ben-manes.versions") version "0.39.0"
+    id("com.github.ben-manes.versions") version "0.43.0"
 }
 
 repositories {
