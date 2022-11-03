@@ -38,7 +38,7 @@ val repositoriesToRemove = listOf<GitHubRepository>(
 )
 
 // Constants
-val runnerVersion = "2.283.3"
+val runnerVersion = "2.298.2"
 val runnerFolder = "../../../github-action-runners"
 val runnerUrl =
     "https://github.com/actions/runner/releases/download/v${runnerVersion}/actions-runner-osx-x64-${runnerVersion}.tar.gz"
