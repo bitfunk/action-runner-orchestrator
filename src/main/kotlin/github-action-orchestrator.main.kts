@@ -13,6 +13,7 @@
 @file:OptIn(ExperimentalCoroutinesApi::class)
 
 import com.google.gson.*
+import eu.jrie.jetbrains.kotlinshell.shell.ExecutionMode
 import eu.jrie.jetbrains.kotlinshell.shell.Shell
 import eu.jrie.jetbrains.kotlinshell.shell.shell
 import eu.jrie.jetbrains.kotlinshell.shell.up
@@ -26,6 +27,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
@@ -38,31 +40,7 @@ shell {
         exitProcess(1)
     }
 
-    val orchestratorConfigFile = File("orchestrator_config.json")
-    if (orchestratorConfigFile.exists().not()) {
-        println("Please provide an orchestrator_config.json")
-        println("---Example---")
-        println("""
-            {
-              "config": {
-                "version": "2.298.2",
-                "folder": "github-action-runners",
-                "isArm": false
-              },
-              "repositories": [
-                {
-                  "organization": "ORG_NAME",
-                  "name": "REPOSITORY_NAME",
-                  "enabled": true
-                }
-              ]
-            }
-        """.trimIndent())
-        println("-------------")
-        exitProcess(1)
-    }
-    val json = orchestratorConfigFile.readText()
-    val orchestratorConfig: OrchestratorConfig = Gson().fromJson(json, OrchestratorConfig::class.java)
+    val orchestratorConfig: OrchestratorConfig = loadConfig()
 
     val client = initHttpClient()
 
@@ -70,15 +48,7 @@ shell {
     cd(orchestratorConfig.config.folder)
 
     // Download runner
-    val runnerFileName = if (orchestratorConfig.config.isArm) {
-        runnerFileArm(orchestratorConfig.config.version)
-    } else {
-        runnerFileX64(orchestratorConfig.config.version)
-    }
-
-    if (fileExists(runnerFileName).not()) {
-        curl(runnerUrl(orchestratorConfig.config.version, runnerFileName))
-    }
+    val runnerFileName = prepareRunner(orchestratorConfig.config)
 
     for (repo in orchestratorConfig.repositories.filter { it.enabled }) {
         println()
@@ -130,18 +100,64 @@ fun initHttpClient(): HttpClient {
     }
 }
 
-// #### Scripts
+fun loadConfig(): OrchestratorConfig {
+    val orchestratorConfigFile = File("orchestrator_config.json")
+    if (orchestratorConfigFile.exists().not()) {
+        println("Please provide an orchestrator_config.json")
+        println("---Example---")
+        println(
+            """
+            {
+              "config": {
+                "version": "2.298.2",
+                "folder": "github-action-runners",
+                "isArm": false
+              },
+              "repositories": [
+                {
+                  "organization": "ORG_NAME",
+                  "name": "REPOSITORY_NAME",
+                  "enabled": true
+                }
+              ]
+            }
+        """.trimIndent()
+        )
+        println("-------------")
+        exitProcess(1)
+    }
+    val json = orchestratorConfigFile.readText()
+    return Gson().fromJson(json, OrchestratorConfig::class.java)
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+suspend fun Shell.prepareRunner(
+    config: RunnerConfig
+): String {
+    val runnerFileName = if (config.isArm) {
+        runnerFileArm(config.version)
+    } else {
+        runnerFileX64(config.version)
+    }
+
+    if (fileExists(runnerFileName).not()) {
+        curl(runnerUrl(config.version, runnerFileName))
+    }
+
+    return runnerFileName
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.installRunner(
     client: HttpClient,
     repo: GitHubRepository,
     accessToken: String,
     runnerFileName: String,
 ) {
-    println("Installing runner")
+    println("Installing runner: ${repo.name}")
     mkDir(repo.name)
     println("Folder created")
 
-    // copy runner
     copy(runnerFileName, repo.name)
     cd(repo.name)
     untar(runnerFileName)
@@ -153,37 +169,45 @@ suspend fun Shell.installRunner(
     println("CurrentToken: $repoToken")
 
     // Configure
-    runnerConfig(repo, repoToken)
+    "./config.sh --url https://github.com/${repo.organization}/${repo.name} --token $repoToken --work _work"()
 
     println()
     println("Install service and start")
-    installService()
-    startService()
+
+    val run = "./run.sh".invoke(ExecutionMode.DETACHED)
+    delay(1_000)
+    run.kill()
+
+    "./svc.sh install"()
+    "./svc.sh start"()
 
     cd(up)
     println()
-    println("Successfully installed runner!")
+    println("Successfully installed runner: ${repo.name}!")
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.uninstallRunner(
     client: HttpClient,
     repo: GitHubRepository,
     accessToken: String
 ) {
-    println("Uninstalling runner")
+    println("Uninstalling runner: ${repo.name}")
     cd(repo.name)
 
     val repoToken = runnerToken(client, repo, accessToken)
 
-    uninstallService()
-    runnerConfigRemove(repoToken)
+    "./svc.sh uninstall"()
+    "./config.sh remove --token $repoToken"()
 
     cd(up)
 
     deleteDir(repo.name)
+    println()
+    println("Successfully uninstalled runner: ${repo.name}!")
 }
 
-suspend fun runnerToken(
+fun runnerToken(
     client: HttpClient,
     repo: GitHubRepository,
     accessToken: String
@@ -202,52 +226,38 @@ suspend fun runnerToken(
     return response.token
 }
 
-// ### Runner
-suspend fun Shell.runnerConfig(repo: GitHubRepository, repoToken: String) {
-    "./config.sh --url https://github.com/${repo.organization}/${repo.name} --token $repoToken --work _work"()
-}
-
-suspend fun Shell.runnerConfigRemove(repoToken: String) {
-    "./config.sh remove --token $repoToken"()
-}
-
-suspend fun Shell.installService() {
-    "./svc.sh install"()
-}
-
-suspend fun Shell.startService() {
-    "./svc.sh start"()
-}
-
-suspend fun Shell.uninstallService() {
-    "./svc.sh uninstall"()
-}
-
 // ### Shell
+@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.mkDir(path: String) {
     "mkdir -p $path"()
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.curl(url: String) {
     "curl -O -L $url"()
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.untar(file: String) {
     "tar xzf $file"()
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.copy(source: String, destination: String) {
     "cp $source $destination"()
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.delete(file: String) {
     "rm $file"()
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.deleteDir(name: String) {
     "rm -rf $name"()
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.fileExists(fileName: String): Boolean {
     val result = StringBuilder().let {
         pipeline { "ls".process() pipe "grep $fileName".process() pipe it }
@@ -256,6 +266,7 @@ suspend fun Shell.fileExists(fileName: String): Boolean {
     return result.contains(fileName)
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.dirExists(dirName: String): Boolean {
     val result = StringBuilder().let {
         pipeline { "ls".process() pipe "grep $dirName".process() pipe it }

@@ -38,10 +38,6 @@ It will create a new folder `github-action-runners` where all repository runners
 
 If you set the repository config enabled to false, the runner will be uninstalled and removed for that repository.
 
-## ToDos
-
-- proper cli
-
 ## Inspired by:
 
 - [Kotlin scripting examples using `kotlin-main-kts`](https://github.com/Kotlin/kotlin-script-examples)
