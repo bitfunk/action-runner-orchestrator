@@ -1,8 +1,7 @@
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.20"
-
-    // https://github.com/ben-manes/gradle-versions-plugin
-    id("com.github.ben-manes.versions") version "0.43.0"
+    alias(libs.plugins.kotlinJvm)
+    alias(libs.plugins.dependencyUpdates)
 }
 
 repositories {
@@ -16,24 +15,8 @@ kotlin.sourceSets.all {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.20")
-    implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:1.7.20")
-    implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies:1.7.20")
-    implementation("org.jetbrains.kotlin:kotlin-script-util:1.7.20")
-
-    // Script dependencies
-    implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.7.20")
-    implementation("org.jetbrains.kotlin:kotlin-main-kts:1.7.20")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.20")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-
-    implementation("eu.jrie.jetbrains:kotlin-shell-core:0.2.1")
-
-    implementation("io.ktor:ktor-client-core-jvm:2.1.3")
-    implementation("io.ktor:ktor-client-cio-jvm:2.1.3")
-    implementation("io.ktor:ktor-client-logging-jvm:2.1.3")
-    implementation("io.ktor:ktor-client-content-negotiation-jvm:2.1.3")
-    implementation("io.ktor:ktor-serialization-gson-jvm:2.1.3")
+    implementation(libs.bundles.script)
+    implementation(libs.bundles.ktor)
 }
 
 tasks.withType<com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask> {
