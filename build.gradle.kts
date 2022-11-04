@@ -1,5 +1,5 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.5.31"
+    id("org.jetbrains.kotlin.jvm") version "1.7.20"
 
     // https://github.com/ben-manes/gradle-versions-plugin
     id("com.github.ben-manes.versions") version "0.43.0"
@@ -16,25 +16,24 @@ kotlin.sourceSets.all {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31")
-    implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:1.5.31")
-    implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies:1.5.31")
-    implementation("org.jetbrains.kotlin:kotlin-script-util:1.5.31")
-    implementation("org.apache.ivy:ivy:2.5.0")
-
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.20")
+    implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:1.7.20")
+    implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies:1.7.20")
+    implementation("org.jetbrains.kotlin:kotlin-script-util:1.7.20")
 
     // Script dependencies
-    implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.5.31")
-    implementation("org.jetbrains.kotlin:kotlin-main-kts:1.5.31")
+    implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.7.20")
+    implementation("org.jetbrains.kotlin:kotlin-main-kts:1.7.20")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.20")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+
     implementation("eu.jrie.jetbrains:kotlin-shell-core:0.2.1")
-    implementation("org.slf4j:slf4j-simple:1.7.32")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-    implementation("io.ktor:ktor-client-core-jvm:1.6.4")
-    implementation("io.ktor:ktor-client-cio-jvm:1.6.4")
-    implementation("io.ktor:ktor-client-logging-jvm:1.6.4")
-    implementation("io.ktor:ktor-client-serialization:1.6.4")
-    implementation("io.ktor:ktor-client-jackson:1.6.4")
+
+    implementation("io.ktor:ktor-client-core-jvm:2.1.3")
+    implementation("io.ktor:ktor-client-cio-jvm:2.1.3")
+    implementation("io.ktor:ktor-client-logging-jvm:2.1.3")
+    implementation("io.ktor:ktor-client-content-negotiation-jvm:2.1.3")
+    implementation("io.ktor:ktor-serialization-gson-jvm:2.1.3")
 }
 
 tasks.withType<com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask> {

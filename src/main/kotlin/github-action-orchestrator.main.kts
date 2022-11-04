@@ -1,29 +1,30 @@
-#!/usr/bin/env kscript
+#!/usr/bin/env kotlin
 
-@file:DependsOn("org.jetbrains.kotlin:kotlin-script-runtime:1.5.31")
-@file:DependsOn("org.jetbrains.kotlin:kotlin-main-kts:1.5.31")
+@file:DependsOn("org.jetbrains.kotlin:kotlin-script-runtime:1.7.20")
+@file:DependsOn("org.jetbrains.kotlin:kotlin-main-kts:1.7.20")
+@file:DependsOn("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.20")
+@file:DependsOn("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 @file:DependsOn("eu.jrie.jetbrains:kotlin-shell-core:0.2.1")
-@file:DependsOn("org.slf4j:slf4j-simple:1.7.28")
-@file:DependsOn("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31")
-@file:DependsOn("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-@file:DependsOn("io.ktor:ktor-client-core-jvm:1.6.4")
-@file:DependsOn("io.ktor:ktor-client-cio-jvm:1.6.4")
-@file:DependsOn("io.ktor:ktor-client-logging-jvm:1.6.4")
-@file:DependsOn("io.ktor:ktor-client-serialization-jvm:1.6.4")
-@file:DependsOn("io.ktor:ktor-client-jackson:1.6.4")
-@file:CompilerOptions("-Xopt-in=kotlin.RequiresOptIn")
-@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@file:DependsOn("io.ktor:ktor-client-core-jvm:2.1.3")
+@file:DependsOn("io.ktor:ktor-client-cio-jvm:2.1.3")
+@file:DependsOn("io.ktor:ktor-client-logging-jvm:2.1.3")
+@file:DependsOn("io.ktor:ktor-client-content-negotiation-jvm:2.1.3")
+@file:DependsOn("io.ktor:ktor-serialization-gson-jvm:2.1.3")
+@file:OptIn(ExperimentalCoroutinesApi::class)
 
-import eu.jrie.jetbrains.kotlinshell.shell.*
+import eu.jrie.jetbrains.kotlinshell.shell.Shell
+import eu.jrie.jetbrains.kotlinshell.shell.shell
+import eu.jrie.jetbrains.kotlinshell.shell.up
+import kotlin.system.exitProcess
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.logging.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.util.*
+import io.ktor.serialization.gson.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlin.system.exitProcess
 
 // ### Data
 val organization = "wmontwe"
@@ -39,13 +40,13 @@ val repositoriesToRemove = listOf<GitHubRepository>(
 
 // Constants
 val runnerVersion = "2.298.2"
-val runnerFolder = "../../../github-action-runners"
+val runnerFolder = "github-action-runners"
 val runnerUrl =
     "https://github.com/actions/runner/releases/download/v${runnerVersion}/actions-runner-osx-x64-${runnerVersion}.tar.gz"
-val runnerFile = "actions-runner-osx-x64-${runnerVersion}.tar.gz"
+val runnerFileX64 = "actions-runner-osx-x64-${runnerVersion}.tar.gz"
+val runnerFileArm = "actions-runner-osx-arm64-${runnerVersion}.tar.gz"
 
 // Script
-@OptIn(ExperimentalCoroutinesApi::class)
 shell {
     val accessToken = env("GITHUB_ACTIONS_RUNNER_REGISTRATION_TOKEN")
     if (accessToken.isEmpty()) {
@@ -56,11 +57,11 @@ shell {
 
     val client = initHttpClient()
 
-    mkdirp(runnerFolder)
+    mkDir(runnerFolder)
     cd(runnerFolder)
 
     // Download runner
-    if (fileExists(runnerFile).not()) {
+    if (fileExists(runnerFileX64).not()) {
         curl(runnerUrl)
     }
 
@@ -105,27 +106,30 @@ shell {
 fun initHttpClient(): HttpClient {
     return HttpClient(CIO) {
         install(Logging) {
-            logger = Logger.DEFAULT
+            logger = Logger.SIMPLE
             level = LogLevel.INFO
         }
-        install(JsonFeature) {
-            serializer = JacksonSerializer()
+        install(ContentNegotiation) {
+            gson()
         }
     }
 }
 
 // #### Scripts
-@OptIn(ExperimentalCoroutinesApi::class)
-suspend fun Shell.installRunner(client: HttpClient, repo: GitHubRepository, accessToken: String) {
+suspend fun Shell.installRunner(
+    client: HttpClient,
+    repo: GitHubRepository,
+    accessToken: String
+) {
     println("Installing runner")
-    mkdirp(repo.name)
+    mkDir(repo.name)
     println("Folder created")
 
     // copy runner
-    copy(runnerFile, repo.name)
+    copy(runnerFileX64, repo.name)
     cd(repo.name)
-    untar(runnerFile)
-    delete(runnerFile)
+    untar(runnerFileX64)
+    delete(runnerFileX64)
     println("Runner copied")
 
     // request token
@@ -145,8 +149,11 @@ suspend fun Shell.installRunner(client: HttpClient, repo: GitHubRepository, acce
     println("Successfully installed runner!")
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
-suspend fun Shell.uninstallRunner(client: HttpClient, repo: GitHubRepository, accessToken: String) {
+suspend fun Shell.uninstallRunner(
+    client: HttpClient,
+    repo: GitHubRepository,
+    accessToken: String
+) {
     println("Uninstalling runner")
     cd(repo.name)
 
@@ -160,80 +167,68 @@ suspend fun Shell.uninstallRunner(client: HttpClient, repo: GitHubRepository, ac
     deleteDir(repo.name)
 }
 
-@OptIn(InternalAPI::class)
-suspend fun runnerToken(client: HttpClient, repo: GitHubRepository, accessToken: String): String {
+suspend fun runnerToken(
+    client: HttpClient,
+    repo: GitHubRepository,
+    accessToken: String
+): String {
     val url = "https://api.github.com/repos/${repo.organization}/${repo.name}/actions/runners/registration-token"
     val response: TokenResponse = client.post(url) {
         headers {
-            append(HttpHeaders.Authorization, "token $accessToken")
-            append(HttpHeaders.Accept, "application/vnd.github.v3+json")
+            append(HttpHeaders.Authorization, "Bearer $accessToken")
+            append(HttpHeaders.Accept, "application/vnd.github+json")
         }
-    }
+    }.body()
+
     return response.token
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
+// ### Runner
 suspend fun Shell.runnerConfig(repo: GitHubRepository, repoToken: String) {
     "./config.sh --url https://github.com/${repo.organization}/${repo.name} --token $repoToken --work _work"()
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.runnerConfigRemove(repoToken: String) {
     "./config.sh remove --token $repoToken"()
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.installService() {
     "./svc.sh install"()
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.startService() {
     "./svc.sh start"()
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.uninstallService() {
     "./svc.sh uninstall"()
 }
 
 // ### Shell
-@OptIn(ExperimentalCoroutinesApi::class)
-suspend fun Shell.mkdirp(path: String) {
+suspend fun Shell.mkDir(path: String) {
     "mkdir -p $path"()
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.curl(url: String) {
     "curl -O -L $url"()
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.untar(file: String) {
-    "tar xzf ${file}"()
+    "tar xzf $file"()
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.copy(source: String, destination: String) {
     "cp $source $destination"()
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.delete(file: String) {
     "rm $file"()
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.deleteDir(name: String) {
     "rm -rf $name"()
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
-suspend fun Shell.fileCreate(fileName: String) {
-    "touch $fileName"()
-}
-
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.fileExists(fileName: String): Boolean {
     val result = StringBuilder().let {
         pipeline { "ls".process() pipe "grep $fileName".process() pipe it }
@@ -242,7 +237,6 @@ suspend fun Shell.fileExists(fileName: String): Boolean {
     return result.contains(fileName)
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun Shell.dirExists(dirName: String): Boolean {
     val result = StringBuilder().let {
         pipeline { "ls".process() pipe "grep $dirName".process() pipe it }
@@ -250,7 +244,6 @@ suspend fun Shell.dirExists(dirName: String): Boolean {
     }
     return result.contains(dirName)
 }
-
 
 // #### Data
 data class TokenResponse(
