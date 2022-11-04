@@ -5,12 +5,20 @@
 
 [repository]: https://github.com/bitfunk/action-runner-orchestrator
 [issues]: https://github.com/bitfunk/action-runner-orchestrator/issues
+[releases]: https://github.com/bitfunk/action-runner-orchestrator/releases
 
 # GitHub Action Runner Orchestrator
 
-Kotlin script to manage GitHub Action Runners on self-hosted machines
+Kotlin script to manage GitHub Action Runners on self-hosted machines.
 
-Scripts have been developed against Kotlin 1.7.20
+[![Latest release](docs/src/assets/images/badge-release-latest.svg)][releases]
+[![License](docs/src/assets/images/badge-license.svg)](LICENSE)
+
+## About the project
+
+This script helps to manage GitHub action runners for multiple GitHub repositories.
+
+The script has been developed against Kotlin 1.7.20 and is using kotlin-shell and ktor.
 
 ## Getting started
 
@@ -19,7 +27,7 @@ system: `export GITHUB_ACTIONS_RUNNER_REGISTRATION_TOKEN={token}`
 
 ## Usage
 
-Create a `orchestrator_config.json` file following this example:
+Clone the project on your desired runner machine and create a `orchestrator_config.json` file following this example:
 
 ```json
 {
@@ -38,7 +46,7 @@ Create a `orchestrator_config.json` file following this example:
 }
 ```
 
-Add the desired *organization* and *repository names* that you want to orchestrate.
+Add the desired *organization* and *repository names* that you want to this machine to register to as GitHub runner.
 
 Then just run the orchestrator: `./run-orchestrator.sh`
 
