@@ -6,7 +6,7 @@
 [repository]: https://github.com/bitfunk/action-runner-orchestrator
 [issues]: https://github.com/bitfunk/action-runner-orchestrator/issues
 
-# GitHub Action Orchestrator
+# GitHub Action Runner Orchestrator
 
 Kotlin script to manage GitHub Action Runners on self-hosted machines
 
