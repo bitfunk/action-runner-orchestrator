@@ -12,6 +12,7 @@
 @file:DependsOn("io.ktor:ktor-serialization-gson-jvm:2.1.3")
 @file:OptIn(ExperimentalCoroutinesApi::class)
 
+import com.google.gson.*
 import eu.jrie.jetbrains.kotlinshell.shell.Shell
 import eu.jrie.jetbrains.kotlinshell.shell.shell
 import eu.jrie.jetbrains.kotlinshell.shell.up
@@ -25,26 +26,8 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-
-// ### Data
-val organization = "wmontwe"
-
-val repositories = listOf<GitHubRepository>(
-    // KMP - Template
-    GitHubRepository(organization, "mobile-project-blueprint"),
-)
-
-val repositoriesToRemove = listOf<GitHubRepository>(
-    // none
-)
-
-// Constants
-val runnerVersion = "2.298.2"
-val runnerFolder = "github-action-runners"
-val runnerUrl =
-    "https://github.com/actions/runner/releases/download/v${runnerVersion}/actions-runner-osx-x64-${runnerVersion}.tar.gz"
-val runnerFileX64 = "actions-runner-osx-x64-${runnerVersion}.tar.gz"
-val runnerFileArm = "actions-runner-osx-arm64-${runnerVersion}.tar.gz"
+import kotlinx.coroutines.runBlocking
+import java.io.File
 
 // Script
 shell {
@@ -55,24 +38,56 @@ shell {
         exitProcess(1)
     }
 
+    val orchestratorConfigFile = File("orchestrator_config.json")
+    if (orchestratorConfigFile.exists().not()) {
+        println("Please provide an orchestrator_config.json")
+        println("---Example---")
+        println("""
+            {
+              "config": {
+                "version": "2.298.2",
+                "folder": "github-action-runners",
+                "isArm": false
+              },
+              "repositories": [
+                {
+                  "organization": "ORG_NAME",
+                  "name": "REPOSITORY_NAME",
+                  "enabled": true
+                }
+              ]
+            }
+        """.trimIndent())
+        println("-------------")
+        exitProcess(1)
+    }
+    val json = orchestratorConfigFile.readText()
+    val orchestratorConfig: OrchestratorConfig = Gson().fromJson(json, OrchestratorConfig::class.java)
+
     val client = initHttpClient()
 
-    mkDir(runnerFolder)
-    cd(runnerFolder)
+    mkDir(orchestratorConfig.config.folder)
+    cd(orchestratorConfig.config.folder)
 
     // Download runner
-    if (fileExists(runnerFileX64).not()) {
-        curl(runnerUrl)
+    val runnerFileName = if (orchestratorConfig.config.isArm) {
+        runnerFileArm(orchestratorConfig.config.version)
+    } else {
+        runnerFileX64(orchestratorConfig.config.version)
     }
 
-    for (repo in repositories) {
+    if (fileExists(runnerFileName).not()) {
+        curl(runnerUrl(orchestratorConfig.config.version, runnerFileName))
+    }
+
+    for (repo in orchestratorConfig.repositories.filter { it.enabled }) {
         println()
         println("------------>")
         println("Processing repository to configure:  ${repo.name}")
         println("------------")
 
         if (dirExists(repo.name).not()) {
-            installRunner(client, repo, accessToken)
+            installRunner(client, repo, accessToken, runnerFileName)
         } else {
             println("Runner already installed!")
         }
@@ -80,7 +95,7 @@ shell {
         println("<-----------")
     }
 
-    for (repo in repositoriesToRemove) {
+    for (repo in orchestratorConfig.repositories.filter { it.enabled.not() }) {
         println()
         println("------------>")
         println("Processing repository to delete:  ${repo.name}")
@@ -119,17 +134,18 @@ fun initHttpClient(): HttpClient {
 suspend fun Shell.installRunner(
     client: HttpClient,
     repo: GitHubRepository,
-    accessToken: String
+    accessToken: String,
+    runnerFileName: String,
 ) {
     println("Installing runner")
     mkDir(repo.name)
     println("Folder created")
 
     // copy runner
-    copy(runnerFileX64, repo.name)
+    copy(runnerFileName, repo.name)
     cd(repo.name)
-    untar(runnerFileX64)
-    delete(runnerFileX64)
+    untar(runnerFileName)
+    delete(runnerFileName)
     println("Runner copied")
 
     // request token
@@ -173,12 +189,15 @@ suspend fun runnerToken(
     accessToken: String
 ): String {
     val url = "https://api.github.com/repos/${repo.organization}/${repo.name}/actions/runners/registration-token"
-    val response: TokenResponse = client.post(url) {
-        headers {
-            append(HttpHeaders.Authorization, "Bearer $accessToken")
-            append(HttpHeaders.Accept, "application/vnd.github+json")
-        }
-    }.body()
+    val response: TokenResponse
+    runBlocking {
+        response = client.post(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $accessToken")
+                append(HttpHeaders.Accept, "application/vnd.github+json")
+            }
+        }.body()
+    }
 
     return response.token
 }
@@ -245,13 +264,32 @@ suspend fun Shell.dirExists(dirName: String): Boolean {
     return result.contains(dirName)
 }
 
+// ### Runner
+fun runnerUrl(runnerVersion: String, runnerFile: String) =
+    "https://github.com/actions/runner/releases/download/v$runnerVersion/$runnerFile"
+
+fun runnerFileX64(runnerVersion: String) = "actions-runner-osx-x64-$runnerVersion.tar.gz"
+fun runnerFileArm(runnerVersion: String) = "actions-runner-osx-arm64-$runnerVersion.tar.gz"
+
 // #### Data
 data class TokenResponse(
     val token: String,
     val expires_at: String
 )
 
+data class OrchestratorConfig(
+    val config: RunnerConfig,
+    val repositories: List<GitHubRepository>,
+)
+
+data class RunnerConfig(
+    val version: String,
+    val folder: String,
+    val isArm: Boolean,
+)
+
 data class GitHubRepository(
     val organization: String,
-    val name: String
+    val name: String,
+    val enabled: Boolean,
 )
