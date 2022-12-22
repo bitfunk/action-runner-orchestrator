@@ -12,10 +12,15 @@ This project adheres to [semantic versioning](http://semver.org/spec/v2.0.0.html
 
 See [changeset](https://github.com/bitfunk/action-runner-orchestrator/compare/v0.2.0...main)
 
+### Added
+
+- Validation workflow
+
 ### Bumped
 
-- Kotlin 1.7.20 -> 1.7.21
-
+- Kotlin 1.7.20 -> 1.7.22
+- Dependency Updates 0.43.0 -> 0.44.0
+- Ktor 2.1.3 -> 2.2.1
 
 ## [0.2.0](https://github.com/bitfunk/action-runner-orchestrator/releases/tag/v0.2.0)
 
