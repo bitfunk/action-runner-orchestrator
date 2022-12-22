@@ -12,6 +12,10 @@ This project adheres to [semantic versioning](http://semver.org/spec/v2.0.0.html
 
 See [changeset](https://github.com/bitfunk/action-runner-orchestrator/compare/v0.2.1...main)
 
+### Bumped
+
+- Gradle 7.5.1 -> 7.6
+
 ## [0.2.1](https://github.com/bitfunk/action-runner-orchestrator/releases/tag/v0.2.1)
 
 See [changeset](https://github.com/bitfunk/action-runner-orchestrator/compare/v0.2.0...v0.2.1)
