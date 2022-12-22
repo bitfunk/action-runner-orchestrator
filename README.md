@@ -18,7 +18,7 @@ Kotlin script to manage GitHub Action Runners on self-hosted machines.
 
 This script helps to manage GitHub action runners for multiple GitHub repositories.
 
-The script has been developed against Kotlin 1.7.20 and is using kotlin-shell and ktor.
+The script has been developed against Kotlin 1.7.22 and is using kotlin-shell and ktor.
 
 ## Getting started
 

@@ -19,7 +19,7 @@ curl "link" -s -o badge-filename
 Latest release:
 
 ```bash
-curl "https://img.shields.io/badge/Release-0.2.0-blueviolet.svg?style=flat"  -s -o badge-release-latest.svg
+curl "https://img.shields.io/badge/Release-0.2.1-blueviolet.svg?style=flat"  -s -o badge-release-latest.svg
 ```
 
 License:
