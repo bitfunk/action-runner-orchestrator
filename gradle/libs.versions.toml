@@ -1,11 +1,11 @@
 [versions]
-kotlin = "1.7.21"
+kotlin = "1.7.22"
 kotlinCoroutines = "1.6.4"
 dependencyUpdates = "0.44.0"
 
 kotlinShell = "0.2.1"
 
-ktor = "2.1.3"
+ktor = "2.2.1"
 
 [libraries]
 kotlin-script-runtime = { module = "org.jetbrains.kotlin:kotlin-script-runtime", version.ref = "kotlin"}
