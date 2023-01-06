@@ -1,5 +1,5 @@
 [versions]
-kotlin = "1.7.22"
+kotlin = "1.8.0"
 kotlinCoroutines = "1.6.4"
 dependencyUpdates = "0.44.0"
 
