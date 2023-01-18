@@ -12,6 +12,5 @@
   "labels": [    
     "dependencies"    
   ],   
-  "branchNameStrict": true,   
-  "separateMinorPatch": true
+  "branchNameStrict": true,
 }
