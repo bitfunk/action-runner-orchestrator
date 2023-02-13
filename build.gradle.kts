@@ -39,6 +39,6 @@ fun isNonStable(version: String): Boolean {
 }
 
 tasks.named<Wrapper>("wrapper") {
-    gradleVersion = "7.6"
+    gradleVersion = "8.0"
     distributionType = Wrapper.DistributionType.ALL
 }
