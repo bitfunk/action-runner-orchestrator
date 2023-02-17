@@ -15,7 +15,7 @@ See [changeset](https://github.com/bitfunk/action-runner-orchestrator/compare/v0
 ### Bumped
 
 - Gradle 7.5.1 -> 8.0
-- Kotlin 1.7.22 -> 1.8.0
+- Kotlin 1.7.22 -> 1.8.10
 - Ktor 2.2.1 -> 2.2.3
 - Dependency Updates 0.44.0 -> 0.45.0
 
