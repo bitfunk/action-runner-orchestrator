@@ -1,7 +1,7 @@
 [versions]
 kotlin = "1.8.10"
 kotlinCoroutines = "1.6.4"
-dependencyUpdates = "0.45.0"
+dependencyUpdates = "0.46.0"
 
 kotlinShell = "0.2.1"
 
