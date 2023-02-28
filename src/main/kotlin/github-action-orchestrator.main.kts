@@ -6,7 +6,7 @@
 @file:DependsOn("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 @file:DependsOn("eu.jrie.jetbrains:kotlin-shell-core:0.2.1")
 @file:DependsOn("io.ktor:ktor-client-core-jvm:2.2.3")
-@file:DependsOn("io.ktor:ktor-client-cio-jvm:2.2.3")
+@file:DependsOn("io.ktor:ktor-client-cio-jvm:2.2.4")
 @file:DependsOn("io.ktor:ktor-client-logging-jvm:2.2.3")
 @file:DependsOn("io.ktor:ktor-client-content-negotiation-jvm:2.2.3")
 @file:DependsOn("io.ktor:ktor-serialization-gson-jvm:2.2.3")
