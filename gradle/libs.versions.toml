@@ -5,7 +5,7 @@ dependencyUpdates = "0.46.0"
 
 kotlinShell = "0.2.1"
 
-ktor = "2.2.3"
+ktor = "2.2.4"
 
 [libraries]
 kotlin-script-runtime = { module = "org.jetbrains.kotlin:kotlin-script-runtime", version.ref = "kotlin"}
