@@ -1,8 +1,8 @@
 #!/usr/bin/env kotlin
 
-@file:DependsOn("org.jetbrains.kotlin:kotlin-script-runtime:1.8.20")
-@file:DependsOn("org.jetbrains.kotlin:kotlin-main-kts:1.8.20")
-@file:DependsOn("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.20")
+@file:DependsOn("org.jetbrains.kotlin:kotlin-script-runtime:1.8.21")
+@file:DependsOn("org.jetbrains.kotlin:kotlin-main-kts:1.8.21")
+@file:DependsOn("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.21")
 @file:DependsOn("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 @file:DependsOn("eu.jrie.jetbrains:kotlin-shell-core:0.2.1")
 @file:DependsOn("io.ktor:ktor-client-core-jvm:2.3.0")
