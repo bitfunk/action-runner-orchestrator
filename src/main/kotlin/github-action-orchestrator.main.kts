@@ -9,7 +9,7 @@
 @file:DependsOn("io.ktor:ktor-client-cio-jvm:2.3.0")
 @file:DependsOn("io.ktor:ktor-client-logging-jvm:2.3.0")
 @file:DependsOn("io.ktor:ktor-client-content-negotiation-jvm:2.3.0")
-@file:DependsOn("io.ktor:ktor-serialization-gson-jvm:2.3.0")
+@file:DependsOn("io.ktor:ktor-serialization-gson-jvm:2.3.4")
 @file:OptIn(ExperimentalCoroutinesApi::class)
 
 import com.google.gson.*
