@@ -18,6 +18,7 @@ See [changeset](https://github.com/bitfunk/action-runner-orchestrator/compare/v0
 - Kotlin 1.7.22 -> 1.9.10
 - Ktor 2.2.1 -> 2.3.4
 - Dependency Updates 0.44.0 -> 0.48.0
+- KotlinX Coroutines 1.6.4 -> 1.7.3
 
 ## [0.2.1](https://github.com/bitfunk/action-runner-orchestrator/releases/tag/v0.2.1)
 
